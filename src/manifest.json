@@ -1,0 +1,44 @@
+{
+  "manifest_version": 2,
+  "name": "Vaccin Finder",
+  "version": "0.1",
+  "description": "Hitta tid för covidvaccin i Västernorrland",
+  "author": "crash007",
+  "permissions": [
+    "https://*.mittvaccin.se/*",
+    "http://*.mittvaccin.se/",
+    "alarms",
+    "notifications"
+  ],
+  
+  "icons": {
+    "128": "icons/icon-128x128.png"
+  },
+  "background": {
+    "scripts": [
+      "libs/jquery-3.4.1.min.js",
+      "background.js"
+    ]
+  },
+
+  "content_scripts": [
+    {
+      "css": [
+        "frontend.css"
+      ],
+      "matches": [
+        "https://*.mittvaccin.se/*",
+        "http://*.mittvaccin.se/"
+	
+      ],
+      "js": [
+        "libs/jquery-3.4.1.min.js",
+        "frontend.js"
+      ],
+      "run_at": "document_end"
+    }
+  ]
+
+
+}
+
