@@ -47,7 +47,7 @@ console.log("Running..");
 
 chrome.alarms.create("checkerAlarm", {
     delayInMinutes: 0,
-    periodInMinutes: 0.2
+    periodInMinutes: 0.1
 });
 
 chrome.alarms.onAlarm.addListener(function (alarm) {
