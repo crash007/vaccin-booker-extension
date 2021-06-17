@@ -1,27 +1,21 @@
-var skip = 0;
+
 const baseUrl = 'https://booking-api.mittvaccin.se/clinique/'
 const daysIntervall = 20; //Dagar framåt att söka
 
-//let clinique2 = {'name': 'Nacksta', 'cliniqueId': '1291', 'appointmentType': '7359'}; //restdos
-//let clinique3 = {'name': 'Timrå', 'cliniqueId': '1311', 'appointmentType': '10620'};
-//let clinique3 = {'name': 'Härnösand', 'cliniqueId': '1309', 'appointmentType': '12044'};
-//let clinique4 = {'name': 'kramfors', 'cliniqueId': '1323', 'appointmentType': '9132'};
 
 const cliniques = [
     {'name': 'Nacksta', 'cliniqueId': '1291', 'appointmentType': '8853'},
-    {'name': 'Nacksta restdos', 'cliniqueId': '1291', 'appointmentType': '17418'}
+    {'name': 'Nacksta restdos', 'cliniqueId': '1291', 'appointmentType': '17418'},
+    {'name': 'Timrå', 'cliniqueId': '1311', 'appointmentType': '10620'},
+    //{'name': 'Härnösand', 'cliniqueId': '1309', 'appointmentType': '12044'}
+    //{'name': 'kramfors', 'cliniqueId': '1323', 'appointmentType': '9132'}  //bortkommenterad klinik
 ];
-
 
 
 const dateFrom = toFormattedDateString(new Date());
 const dateTo = toFormattedDateString(addDays(new Date(), daysIntervall));
 const period = dateFrom+'-'+dateTo;
-
-//cliniques.set('Nacksta', [baseUrl+'1291/appointments/8853/slots/210607-210613','https://booking-api.mittvaccin.se/clinique/1291/appointments/8853/slots/210614-210620','https://booking-api.mittvaccin.se/clinique/1291/appointments/8853/slots/210621-210627']);
-//cliniques.set('Timra', ['https://booking-api.mittvaccin.se/clinique/1311/appointments/10620/slots/210607-210613', 'https://booking-api.mittvaccin.se/clinique/1311/appointments/10620/slots/210614-210620','https://booking-api.mittvaccin.se/clinique/1311/appointments/10620/slots/210621-210627']);
-//cliniques.set('Harnosand', ['https://booking-api.mittvaccin.se/clinique/1309/appointments/12044/slots/210607-210613', 'https://booking-api.mittvaccin.se/clinique/1309/appointments/12044/slots/210614-210620', 'https://booking-api.mittvaccin.se/clinique/1309/appointments/12044/slots/210621-210627']);
-//cliniques.set('kramfors', ['https://booking-api.mittvaccin.se/clinique/1323/appointments/9132/slots/210607-210613','https://booking-api.mittvaccin.se/clinique/1323/appointments/9132/slots/210614-210620', 'https://booking-api.mittvaccin.se/clinique/1323/appointments/9132/slots/210621-210627']);
+var skip = 0;
 
 /*------------------------*/
 function toFormattedDateString(date){
@@ -34,6 +28,7 @@ function addDays(date, days) {
 }
 
 function parse(data,clinique) {
+    //console.log("parsing response from server.");
     let foundTime = false;
     $(data).each(function (i, d) {
         $(d.slots).each(function (i, da) {
@@ -48,7 +43,7 @@ function parse(data,clinique) {
                 notification(url, clinique.name);
                 chrome.tabs.create({ url: url });
                 foundTime = true; //break loop
-
+               // reserveTime(clinique,d.date,da.when);
                 if(skip == 0){
                     skip = 10;
                 }
@@ -64,19 +59,34 @@ function parse(data,clinique) {
 
 
 function execute() {
+    console.log("executing");
     cliniques.forEach(function (clinique, i) {
             let url = baseUrl+clinique.cliniqueId+'/appointments/'+clinique.appointmentType+'/slots/'+period;
-            $.get(url, function (data, textStatus, jqXHR) {  // success callback
-                parse(data, clinique);
-            });
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            ifModified: true, //get 200 and 304
+            statusCode: {
+                200: function(data, textStatus, jqXHR) {
+                    parse(data, clinique);
+                },
+                304: function(responseObject, textStatus, errorThrown) {
+
+                    //Nothing has changed
+                   // console.log("No changes detected.");
+                }
+            }
+
         });
+    });
 }
 
 console.log("Running..");
 
 chrome.alarms.create("checkerAlarm", {
     delayInMinutes: 0,
-    periodInMinutes: 0.1
+    periodInMinutes: 0.08
 });
 
 chrome.alarms.onAlarm.addListener(function (alarm) {
@@ -101,5 +111,4 @@ function notification(url, text) {
     chrome.notifications.create(url, opt);
 
 }
-
 
